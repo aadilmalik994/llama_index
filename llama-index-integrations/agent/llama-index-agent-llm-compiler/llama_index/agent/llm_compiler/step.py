@@ -149,7 +149,8 @@ class LLMCompilerAgentWorker(BaseAgentWorker):
         self.callback_manager = callback_manager or llm.callback_manager
 
         self.planner_example_prompt_str = (
-            planner_example_prompt_str or PLANNER_EXAMPLE_PROMPT
+            #planner_example_prompt_str or PLANNER_EXAMPLE_PROMPT
+            planner_example_prompt_str
         )
         self.system_prompt = generate_llm_compiler_prompt(
             tools, example_prompt=self.planner_example_prompt_str
@@ -167,7 +168,8 @@ class LLMCompilerAgentWorker(BaseAgentWorker):
         self.verbose = verbose
 
         # joiner program
-        self.joiner_prompt = joiner_prompt or PromptTemplate(OUTPUT_PROMPT)
+        #self.joiner_prompt = joiner_prompt or PromptTemplate(OUTPUT_PROMPT)
+        self.joiner_prompt = PromptTemplate(joiner_prompt)
         self.joiner_program = LLMTextCompletionProgram.from_defaults(
             output_parser=LLMCompilerJoinerParser(),
             output_cls=JoinerOutput,
@@ -192,11 +194,13 @@ class LLMCompilerAgentWorker(BaseAgentWorker):
         tools: Optional[Sequence[BaseTool]] = None,
         tool_retriever: Optional[ObjectRetriever[BaseTool]] = None,
         llm: Optional[LLM] = None,
+        planner_example_prompt_str: Optional[str] = None,
+        joiner_prompt: Optional[PromptTemplate] = None,
         callback_manager: Optional[CallbackManager] = None,
         verbose: bool = False,
         **kwargs: Any,
     ) -> "LLMCompilerAgentWorker":
-        """Convenience constructor method from set of BaseTools (Optional).
+        """Convenience constructor method from set of of BaseTools (Optional).
 
         Returns:
             LLMCompilerAgentWorker: the LLMCompilerAgentWorker instance
@@ -209,6 +213,8 @@ class LLMCompilerAgentWorker(BaseAgentWorker):
             tools=tools or [],
             tool_retriever=tool_retriever,
             llm=llm,
+            planner_example_prompt_str=planner_example_prompt_str,
+            joiner_prompt=joiner_prompt,
             callback_manager=callback_manager,
             verbose=verbose,
         )
@@ -425,6 +431,6 @@ class LLMCompilerAgentWorker(BaseAgentWorker):
     def finalize_task(self, task: Task, **kwargs: Any) -> None:
         """Finalize task, after all the steps are completed."""
         # add new messages to memory
-        task.memory.put_messages(task.extra_state["new_memory"].get_all())
+        task.memory.set(task.memory.get() + task.extra_state["new_memory"].get_all())
         # reset new memory
         task.extra_state["new_memory"].reset()

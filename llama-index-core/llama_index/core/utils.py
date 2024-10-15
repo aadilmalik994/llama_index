@@ -27,6 +27,7 @@ from typing import (
     Union,
     runtime_checkable,
 )
+import logging
 
 
 class GlobalsHelper:
@@ -62,9 +63,9 @@ class GlobalsHelper:
             nltk.download("stopwords", download_dir=self._nltk_data_dir)
 
         try:
-            nltk.data.find("tokenizers/punkt_tab")
+            nltk.data.find("tokenizers/punkt")
         except LookupError:
-            nltk.download("punkt_tab", download_dir=self._nltk_data_dir)
+            nltk.download("punkt", download_dir=self._nltk_data_dir)
 
     @property
     def stopwords(self) -> List[str]:
@@ -87,7 +88,6 @@ class GlobalsHelper:
 
 
 globals_helper = GlobalsHelper()
-
 
 # Global Tokenizer
 @runtime_checkable
@@ -456,7 +456,16 @@ def print_text(text: str, color: Optional[str] = None, end: str = "") -> None:
     Returns:
         None
     """
+    logging.basicConfig(
+    filename='/content/log_file_test.log', # write to this file
+    filemode='a', # open in append mode
+    format='%(name)s - %(levelname)s - %(message)s',
+    force=True,
+    level = logging.INFO
+    )
+
     text_to_print = _get_colored_text(text, color) if color is not None else text
+    logging.info(text_to_print)
     print(text_to_print, end=end)
 
 
